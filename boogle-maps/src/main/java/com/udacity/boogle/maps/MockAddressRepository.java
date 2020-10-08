@@ -1,8 +1,6 @@
 package com.udacity.boogle.maps;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -10,11 +8,21 @@ import java.util.stream.Collectors;
  */
 class MockAddressRepository {
 
+    static Map<String, Address> lookupCache = new HashMap<>();
+
     /**
      * Gets a random address from the list.
+     *
+     * @param lat
+     * @param lon
      * @return A new, random address split into street, city, state and zip
      */
-    static Address getRandom() {
+    static Address getRandom(Double lat, Double lon) {
+
+        String cacheKey = String.valueOf(lat) + "#" + String.valueOf(lon);
+        if (lookupCache.containsKey(cacheKey)) {
+            return lookupCache.get(cacheKey);
+        }
 
         Random generator = new Random();
         int randomIndex = generator.nextInt(ADDRESSES.length);
@@ -35,7 +43,11 @@ class MockAddressRepository {
         String state = list.pollLast();
         String city = String.join(" ", list);
 
-        return new Address(streetAndNumber, city, state, zip);
+        Address newAddress = new Address(streetAndNumber, city, state, zip);
+        lookupCache.put(cacheKey, newAddress);
+
+        return lookupCache.get(cacheKey);
+
     }
 
     /**

@@ -4,6 +4,8 @@ package com.udacity.vehicles.api;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
+import com.udacity.vehicles.client.maps.MapsClient;
+import com.udacity.vehicles.domain.Location;
 import com.udacity.vehicles.domain.car.Car;
 import com.udacity.vehicles.service.CarService;
 import java.net.URI;
@@ -32,11 +34,13 @@ import org.springframework.web.bind.annotation.RestController;
 class CarController {
 
     private final CarService carService;
+    private final MapsClient mapsClient;
     private final CarResourceAssembler assembler;
 
-    CarController(CarService carService, CarResourceAssembler assembler) {
+    CarController(CarService carService, CarResourceAssembler assembler, MapsClient mapsClient) {
         this.carService = carService;
         this.assembler = assembler;
+        this.mapsClient = mapsClient;
     }
 
     /**
@@ -84,6 +88,8 @@ class CarController {
     @PutMapping("/{id}")
     ResponseEntity<?> put(@PathVariable Long id, @Valid @RequestBody Car car) {
         car.setId(id);
+        Location location = mapsClient.getAddress(car.getLocation());
+        car.setLocation(location);
         carService.save(car);
         Resource<Car> resource = assembler.toResource(car);
         return ResponseEntity.ok(resource);
