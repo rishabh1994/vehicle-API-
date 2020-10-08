@@ -3,9 +3,7 @@ package com.udacity.vehicles.api;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -17,6 +15,7 @@ import com.udacity.vehicles.domain.Location;
 import com.udacity.vehicles.domain.car.Car;
 import com.udacity.vehicles.domain.car.Details;
 import com.udacity.vehicles.domain.manufacturer.Manufacturer;
+import com.udacity.vehicles.service.CarNotFoundException;
 import com.udacity.vehicles.service.CarService;
 
 import java.net.URI;
@@ -108,7 +107,7 @@ public class CarControllerTest {
 
         mvc.perform(get("/cars"))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(content().string(containsString(carString.substring(0, carString.length()-1))));
+                .andExpect(content().string(containsString(carString.substring(0, carString.length() - 1))));
 
     }
 
@@ -126,7 +125,7 @@ public class CarControllerTest {
 
         mvc.perform(get("/cars/1"))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(content().string(containsString(carString.substring(0, carString.length()-1))));
+                .andExpect(content().string(containsString(carString.substring(0, carString.length() - 1))));
 
     }
 
@@ -140,6 +139,35 @@ public class CarControllerTest {
         mvc.perform(delete("/cars/1"))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(content().string(equalTo("")));
+    }
+
+    @Test
+    public void updateCar() throws Exception {
+
+        Car car = getCar();
+        mvc.perform(
+                post(new URI("/cars"))
+                        .content(json.write(car).getJson())
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isCreated());
+
+        mvc.perform(
+                put(new URI("/cars/1"))
+                        .content(json.write(car).getJson())
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().is2xxSuccessful());
+
+        given(carService.save(any())).willThrow(new CarNotFoundException());
+
+        mvc.perform(
+                put(new URI("/cars/2"))
+                        .content(json.write(car).getJson())
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().is4xxClientError());
+        ;
     }
 
     /**
